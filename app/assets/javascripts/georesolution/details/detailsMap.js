@@ -1,8 +1,7 @@
 define(['georesolution/common', 'common/map'], function(common, MapBase) {
   
   var searchresults = {},
-      searchresultsLayer,
-      clearResultsButton = $('<div id="clear-results">Clear Results</div>');
+      searchresultsLayer;
   
   var DetailsMap = function(div, opt_basemap) {
     var self = this;
@@ -16,10 +15,6 @@ define(['georesolution/common', 'common/map'], function(common, MapBase) {
       self.fireEvent('selectSearchresult', searchresults[e.target.href].result);
       return false;
     });
-    
-    clearResultsButton.hide();
-    clearResultsButton.on('click', function() { self.clearSearchresults(); });
-    $(div).append(clearResultsButton);
   }
   DetailsMap.prototype = Object.create(MapBase.prototype);
   
@@ -32,10 +27,11 @@ define(['georesolution/common', 'common/map'], function(common, MapBase) {
         '<small>' + result.names.slice(0, 8).join(', ') + '</small>' +
         '<br/>' + 
         '<a href="' + result.uri + '" class="gazetteer-id" title="Click to confirm" onclick="return false;"><span class="icon">&#xf14a;</span> ' + common.Utils.formatGazetteerURI(result.uri)) + '</a>';
-      
+                
+      marker.on('mouseover', function() { marker.openPopup(); });
+
       searchresults[result.uri] = { result: result, marker: marker };
       searchresultsLayer.addLayer(marker);
-      clearResultsButton.show();
     }
   };
   
@@ -61,7 +57,6 @@ define(['georesolution/common', 'common/map'], function(common, MapBase) {
   
   DetailsMap.prototype.clearSearchresults = function() {
     searchresultsLayer.clearLayers();
-    clearResultsButton.hide();
     this.fitToAnnotations();
   };
   

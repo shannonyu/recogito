@@ -91,6 +91,10 @@ define(['common/hasEvents'], function(HasEvents) {
     return zoom;
   };
   
+  Map.prototype.refresh = function() {
+    this.map.invalidateSize();
+  };
+  
   /** Destroys the map **/  
   Map.prototype.destroy = function() {
     annotations = {};

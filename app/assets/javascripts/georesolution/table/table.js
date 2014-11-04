@@ -1,6 +1,6 @@
-define(['georesolution/common', 'georesolution/details', 'georesolution/batch', 'georesolution/table/formatters'], function(common, DetailsPopup, BatchPopup, Formatters) {
+define(['georesolution/common', 'georesolution/details/detailsPopup', 'georesolution/batch', 'georesolution/table/formatters'], function(common, DetailsPopup, BatchPopup, Formatters) {
 
-  var baseMap;
+  var baseMap, detailsPopup, eventBroker;
 
   /**
    * The table component of the UI.
@@ -13,8 +13,7 @@ define(['georesolution/common', 'georesolution/details', 'georesolution/batch', 
    * @param {Element} tableDiv the DIV to hold the SlickGrid table
    * @constructor 
    */
-  var TableView = function(tableDiv) {  
-    // Inheritance - not the nicest pattern but works for our case
+  var TableView = function(tableDiv, _eventBroker) {  
     common.HasEvents.call(this);
   
     var self = this,
@@ -31,6 +30,9 @@ define(['georesolution/common', 'georesolution/details', 'georesolution/batch', 
                    { name: 'Auto Match', field: 'place', id: 'place' , formatter: Formatters.GazeeteerURIFormatter },
                    { name: 'Corrected', field: 'place_fixed', id: 'place_fixed', formatter: Formatters.GazeeteerURIFormatter },
                    { name: 'Status', field: 'status', id: 'status', headerCssClass: 'table-status-header', width:80, formatter: Formatters.StatusFormatter }];
+   
+    detailsPopup = new DetailsPopup(_eventBroker);
+    eventBroker = _eventBroker;
    
     // Initialize dataView and grid
     this._dataView = new Slick.Data.DataView();
@@ -159,31 +161,42 @@ define(['georesolution/common', 'georesolution/details', 'georesolution/batch', 
   TableView.prototype._openDetailsPopup = function(idx) {
     var self = this,
         prev2 = this.getPrevN(idx, 2),
-        next2 = this.getNextN(idx, 2);
+        next2 = this.getNextN(idx, 2), 
+        Events = eventBroker.events;
     
-    var popup = new DetailsPopup(this._grid.getDataItem(idx), prev2, next2, baseMap);
-    popup.on('update', function(annotation) {
+    
+    eventBroker.fireEvent(Events.SHOW_ANNOTATION_DETAILS, {
+      annotation : self._grid.getDataItem(idx),
+      previous : prev2,
+      next : next2,
+      basemap : baseMap
+    });
+    
+    // detailsPopup.show(this._grid.getDataItem(idx), prev2, next2, baseMap);
+    /*
+    detailsPopup.on('update', function(annotation) {
       self._grid.invalidate();
       self.fireEvent('update', annotation);
     });
     
-    popup.on('skip-prev', function() {
+    detailsPopup.on('skip-prev', function() {
       if (idx > 0) {
         popup.destroy();
         self._openDetailsPopup(idx - 1); 
       }
     });
     
-    popup.on('skip-next', function() {
+    detailsPopup.on('skip-next', function() {
       if (idx < self._grid.getDataLength() - 1) {
         popup.destroy();
         self._openDetailsPopup(idx + 1);
       }
     });
     
-    popup.on('baselayerchange', function(e) {
+    detailsPopup.on('baselayerchange', function(e) {
       baseMap = e.name;
     });
+    */
   };
 
   /**
