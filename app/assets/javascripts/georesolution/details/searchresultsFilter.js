@@ -1,35 +1,20 @@
 define(['common/hasEvents'], function(HasEvents) {
           
-  var element,
-      
-      /** List of supported gazetteers **/
-      KnownGazetteers = {
-        'http://pleiades.stoa.org' : 'Pleiades',
-        'http://data.pastplace.org' : 'PastPlace',
-        'http://www.imperium.ahlfeldt.se': 'DARE'
-      },
-      
-      /** Helper function that groups search results by gazetteers **/
-      groupByGazetteer = function(results) {
-        var allGrouped = {};
-        
-        jQuery.each(results, function(idx, result) {
-          var gazetteer = KnownGazetteers[result.uri.substr(0, result.uri.indexOf('/', 7))],
-              key = (gazetteer) ? gazetteer : 'Other', 
-              group = allGrouped[key];
-          
-          if (group)
-            group.push(result);
-          else
-            allGrouped[key] = [result];
-        });     
-        
-        return allGrouped
-      };
+  var element;
   
   /** An overlay component for the details map to filter search results **/
   var SearchresultsFilter = function(el) {
+    var self = this;
+    
     HasEvents.apply(this, arguments);   
+    
+    el.on('click', ':checkbox', function(e) {
+      var checkbox = $(this);
+      if (checkbox.is(':checked'))
+        self.fireEvent('showGazetteer', checkbox.val());
+      else
+        self.fireEvent('hideGazetteer', checkbox.val());
+    });
     
     el.dblclick(function(e) { e.stopPropagation(); })
     el.hide();
@@ -37,13 +22,12 @@ define(['common/hasEvents'], function(HasEvents) {
   };
   SearchresultsFilter.prototype = Object.create(HasEvents.prototype);
   
-  SearchresultsFilter.prototype.show = function(response) {
-    var grouped = groupByGazetteer(response.results),
-        html = response.results.length + ' Results for <em>' + response.query + '</em>';
+  SearchresultsFilter.prototype.show = function(total, query, resultsGrouped) {
+    var html = total + ' Results for <em>' + query + '</em>';
     
     html += '<ul>';
-    for (gazetteer in grouped) {
-      html += '<li><input type="checkbox" value="' + gazetteer + '" checked="true">' + grouped[gazetteer].length + ' ' + gazetteer + '</li>';
+    for (gazetteer in resultsGrouped) {
+      html += '<li><input type="checkbox" value="' + gazetteer + '" checked="true">' + resultsGrouped[gazetteer].length + ' ' + gazetteer + '</li>';
     }
     html += '</ul>';
     

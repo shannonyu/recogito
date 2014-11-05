@@ -2,7 +2,8 @@
 define(['common/hasEvents'], function(HasEvents) {
   
   var annotations = {},
-      annotationsLayer;
+      annotationsLayer,
+      sequenceLayer;
   
   var Map = function(div, opt_basemap) {  
     var self = this,
@@ -54,8 +55,17 @@ define(['common/hasEvents'], function(HasEvents) {
     annotationsLayer = L.featureGroup();
     annotationsLayer.addTo(this.map);
     
+    sequenceLayer = L.featureGroup();
+    sequenceLayer.addTo(this.map);
+    
     // Forward click events
     this.map.on('click', function(e) { self.fireEvent('click', e); });
+    
+    // Close popups on Escape key
+    jQuery(div).on('keyup', function(e) {
+      if (e.which == 27)
+        self.map.closePopup();
+    });
     
     HasEvents.call(this);
   };
@@ -66,7 +76,7 @@ define(['common/hasEvents'], function(HasEvents) {
   Map.Styles = {
     VERIFIED: { color: '#118128', fillColor: '#1bcc3f', opacity: 1, fillOpacity: 1, radius: 6 },
     NOT_VERIFIED: { color: '#808080', fillColor:'#aaa', opacity: 1, fillOpacity: 1, radius: 6 },
-    SEQUENCE: { opacity: 0.7, weight: 8 },
+    SEQUENCE: { opacity: 1, weight: 2 },
     REGION: { opacity: 0.5, fillOpacity: 0.2, radius: 20 }
   };
   
@@ -133,8 +143,8 @@ define(['common/hasEvents'], function(HasEvents) {
   };
 
   /** Adds a sequence line to the map **/  
-  Map.prototype.addSequence = function(annotation, prev_annotations, next_annotations) {
-    var i, coords = [], line,
+  Map.prototype.addSequence = function(annotation, previous, next) {
+    var i, coords = [], line, style,
         pushLatLon = function(annotation) {
           var c;
           
@@ -146,27 +156,38 @@ define(['common/hasEvents'], function(HasEvents) {
           }          
         };
     
-    for (i = 0; i < prev_annotations.length; i++)
-      pushLatLon(prev_annotations[i]);
+    for (i = 0; i < previous.length; i++)
+      pushLatLon(previous[i]);
        
     pushLatLon(annotation);
           
-    for (var i = 0; i < next_annotations.length; i++)
-      pushLatLon(next_annotations[i]);
+    for (var i = 0; i < next.length; i++)
+      pushLatLon(next[i]);
     
-    var style = jQuery.extend(true, {}, Map.Styles.SEQUENCE);
+    style = jQuery.extend(true, {}, Map.Styles.SEQUENCE);
     style.color = (Map.Styles[annotation.status]) ? Map.Styles[annotation.status].color : Map.Styles.NOT_VERIFIED.color;
     line = L.polyline(coords, style);
-    line.setText('►', { repeat: true, offset: 3, attributes: { fill: '#fff', 'font-size':10 }});    
-    annotationsLayer.addLayer(line);
-    line.bringToBack();
+    line.setText('►', { repeat: true, offset: 5, attributes: { fill: style.color, 'font-size':17 }});    
+    sequenceLayer.addLayer(line);
+    sequenceLayer.bringToBack();
   };
   
   /** Fits the map zoom level to cover the bounds of all annotations **/
   Map.prototype.fitToAnnotations = function() {
-    var bounds = annotationsLayer.getBounds();
-    if (bounds.isValid())
-      this.map.fitBounds(annotationsLayer.getBounds());
+    var annotationBounds = annotationsLayer.getBounds(),
+        sequenceBounds = sequenceLayer.getBounds();
+        
+    if (sequenceBounds.isValid())
+      annotationBounds.extend(sequenceBounds);
+      
+    this.map.fitBounds(annotationBounds);
+  };
+  
+  /** Removes all annotations from the map **/
+  Map.prototype.clearAnnotations = function() {
+    annotations = {};
+    annotationsLayer.clearLayers();
+    sequenceLayer.clearLayers();
   };
   
   return Map;
