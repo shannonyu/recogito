@@ -27,7 +27,7 @@ require(['georesolution/map', 'georesolution/table/table', 'georesolution/footer
     map.selectPlace(annotation, prev3, next2); 
   });
   
-  table.on('updateAnnotations', function(annotations) {
+  table.on('update', function(annotations) {
     storeToDB(annotations);
           
     if (!$.isArray(annotations))

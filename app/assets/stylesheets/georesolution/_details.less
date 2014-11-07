@@ -102,12 +102,15 @@
       color:#ccc;
 
       #search-input {
-        font-size:16px;
-        padding:10px;      
-                
+        padding:10px;  
+        vertical-align:top;
+        
         input {
+          vertical-align:middle;
           border:1px solid #ccc;
           width:280px;
+          height:24px;
+          box-sizing:border-box;
           padding:4px 6px;
           outline:none;
           color:#555;
@@ -120,7 +123,35 @@
           box-shadow:inset 0px 0px 5px rgba(0,0,0,0.2);
         }
         
-        span { padding:0 5px 0 8px; }
+        .btn {
+          position:relative;
+          text-align:center;
+          vertical-align:middle;
+          display:inline-block;
+          height:24px;
+          box-sizing:border-box;
+          padding:2px 3px;
+          min-width:24px;
+          font-size:12px;
+          border:1px solid #ccc;
+          
+          .icon {
+            margin:0;
+            padding:0;
+          }
+          
+        } /* .btn */
+        
+        .btn.labeled {
+          padding-right:5px;
+          padding-left:5px;
+        }
+        
+
+        
+        .btn:hover {
+          background-color:#efefef;
+        }
         
       } /* .search-input */
       
@@ -267,7 +298,7 @@
         box-sizing:border-box;
         margin:0;
         padding:20px 15px;
-        font-size:16px;
+        font-size:15px;
         line-height:150%;
         font-family:"Times New Roman", Times, serif;
         word-wrap:break-word;

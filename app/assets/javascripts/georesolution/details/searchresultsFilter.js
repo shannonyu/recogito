@@ -23,7 +23,7 @@ define(['common/hasEvents'], function(HasEvents) {
   SearchresultsFilter.prototype = Object.create(HasEvents.prototype);
   
   SearchresultsFilter.prototype.show = function(total, query, resultsGrouped) {
-    var html = total + ' Results for <em>' + query + '</em>';
+    var html = total + ' Results';
     
     html += '<ul>';
     for (gazetteer in resultsGrouped) {
@@ -33,6 +33,11 @@ define(['common/hasEvents'], function(HasEvents) {
     
     element.html(html);
     element.show();
+  };
+  
+  SearchresultsFilter.prototype.clear = function() {
+    element.html('');
+    element.hide();
   };
   
   return SearchresultsFilter;

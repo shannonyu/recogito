@@ -82,7 +82,13 @@ define(['common/hasEvents'], function(HasEvents) {
   
   /** Returns the bounds of all annotations currently on the map **/
   Map.prototype.getAnnotationBounds = function() {
-    return annotationsLayer.getBounds();
+    var annotationBounds = annotationsLayer.getBounds(),
+        sequenceBounds = sequenceLayer.getBounds();
+        
+    if (sequenceBounds.isValid())
+      annotationBounds.extend(sequenceBounds);
+    
+    return annotationBounds;
   };
   
   /** Returns the minimum zoom level of the currently active base layer **/
@@ -124,6 +130,7 @@ define(['common/hasEvents'], function(HasEvents) {
             self.fireEvent('selectAnnotation', annotations[place.uri].annotations);
           });
           annotationsLayer.addLayer(marker); 
+          return marker;
         };
     
     if ((place && place.coordinate) && (annotation.status == 'VERIFIED' || annotation.status == 'NOT_VERIFIED')) {
@@ -138,6 +145,7 @@ define(['common/hasEvents'], function(HasEvents) {
           marker: createMarker(place, style),
           annotations: [annotation]
         };
+        annotations[place.uri] = annotationsForPlace;
       }      
     }
   };
@@ -172,15 +180,27 @@ define(['common/hasEvents'], function(HasEvents) {
     sequenceLayer.bringToBack();
   };
   
+  /** Highlights a marker by opening its popup **/
+  Map.prototype.showMarker = function(annotation) {
+    var place = (annotation.place_fixed) ? annotation.place_fixed : annotation.place,
+        markerAndAnnotations;
+        
+    if (place) {
+      markerAndAnnotations = annotations[place.uri];
+      if (markerAndAnnotations) {
+        console.log(place);
+        markerAndAnnotations.marker.bindPopup(
+          '<strong>' + place.title + '</strong><br/>' +
+          '<small>' + place.names.slice(0, 8).join(', ') + '</small>').openPopup();
+      }
+    }
+  };
+  
   /** Fits the map zoom level to cover the bounds of all annotations **/
   Map.prototype.fitToAnnotations = function() {
-    var annotationBounds = annotationsLayer.getBounds(),
-        sequenceBounds = sequenceLayer.getBounds();
-        
-    if (sequenceBounds.isValid())
-      annotationBounds.extend(sequenceBounds);
-      
-    this.map.fitBounds(annotationBounds);
+    var bounds = this.getAnnotationBounds();
+    if (bounds.isValid())
+      this.map.fitBounds(bounds);
   };
   
   /** Removes all annotations from the map **/

@@ -36,7 +36,11 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
           '        <div id="details-map">' +
           '          <div id="details-search">' +
           '            <div id="search-input">' +
-          '              <input><span class="icon">&#xf002;</span>' + 
+          '              <input>' +
+          '              <div class="btn search"><span class="icon">&#xf002;</span></div>' + 
+          '              <div class="btn labeled fuzzy-search"><span class="icon">&#xf002;</span> Fuzzy</div>' + 
+          '              <div class="btn labeled zoom-all" title="Zoom to All Results"><span class="icon">&#xf0b2;</span> All</div>' + 
+          '              <div class="btn labeled clear" title="Clear Search Results"><span class="icon">&#xf05e;</span> Clear</div>' + 
           '            </div>' +
           '            <div id="search-results"></div>' +
           '          </div>' +
@@ -58,6 +62,10 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
 
         searchContainer = element.find('#details-search'),
         searchInput = element.find('#details-search input'),
+        btnSearch = element.find('#search-input .search'),
+        btnFuzzySearch = element.find('#search-input .fuzzy-search'),
+        btnZoomAll = element.find('#search-input .zoom-all'),
+        btnClearSearch = element.find('#search-input .clear'),
         
         mappingInfoAuto = element.find('.mapping-info.auto'),
         mappingInfoCorrected = element.find('.mapping-info.corrected'),
@@ -110,6 +118,13 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
           }
         },
         
+        resetSearch = function(presetQuery) {
+          searchInput.val(presetQuery);
+          btnZoomAll.hide();
+          btnClearSearch.hide();
+          map.clearSearchresults();
+        },
+        
         /** Load the text (or, TODO, image) preview **/
         loadContentPreview = function(id) {
           jQuery.getJSON('api/annotations/' + id, function(a) {
@@ -137,29 +152,33 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
           // Update browser URL bar
           window.location.hash = annotation.id;
           
+          // Set toponym as search term
+          resetSearch(annotation.toponym);
+          
           // Populate the template
           toponym.html(annotation.toponym);
           setMappingInfo(annotation.place, mappingInfoAuto);
           setMappingInfo(annotation.place_fixed, mappingInfoCorrected);
           
-          // Reset status bar
+          // Status bar
           for (status in statusButtons)
             statusButtons[status].removeClass('active');
             
           if (activeStatusButton)
             activeStatusButton.addClass('active');
-            
+
+          // Text/image preview            
           loadContentPreview(annotation.id);
           
           // Show popup
           element.show();
           
           // Refresh map
-          map.clearSearchresults();
           map.clearAnnotations();
           map.refresh();
           map.addAnnotation(annotation);
           map.addSequence(annotation, previous, next);
+          map.showMarker(annotation);
           
           if (autofit)
             map.fitToAnnotations();
@@ -181,6 +200,8 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
           map.clearSearchresults();
           jQuery.getJSON('api/search/place?query=' + query, function(response) {
             map.showSearchresults(response);
+            btnZoomAll.show();
+            btnClearSearch.show();
           });
         },
         
@@ -230,6 +251,11 @@ define(['georesolution/common', 'georesolution/details/detailsMap'], function(co
     });
     searchContainer.dblclick(stopPropagation);
     searchContainer.mousemove(stopPropagation);
+    
+    btnSearch.click(function() { search(searchInput.val().toLowerCase()); });
+    btnFuzzySearch.click(function() { search(searchInput.val().toLowerCase() +  '~'); });
+    btnZoomAll.click(function() { map.fitToSearchresults(); });
+      //  btnClearSearch = element.find('#search-input .clear'),
     
     /** Controls events **/
     jQuery.each(statusButtons, function(status, button) {

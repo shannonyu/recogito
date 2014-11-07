@@ -97,25 +97,33 @@ define(['georesolution/common', 'common/map', 'georesolution/details/searchresul
   }
   
   DetailsMap.prototype.fitToSearchresults = function() {
-    /*
-    var self = this,
-        bounds,
-        searchBounds = resultsLayer.getBounds(),
+    var self = this, 
+        searchBounds,
         annotationBounds = this.getAnnotationBounds();
     
-    bounds = (searchBounds.isValid()) ? searchBounds : annotationBounds;
-    if (annotationBounds.isValid())
-      bounds.extend(annotationBounds);
+    jQuery.each(resultLayers, function(name, layer) {
+      var bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        if (searchBounds)
+          searchBounds.extend(bounds);
+        else
+          searchBounds = bounds;
+      }
+    });
+    
+    if (searchBounds.isValid()) {
+      if (annotationBounds.isValid())
+        searchBounds.extend(annotationBounds);
       
-    if (bounds)
-      this.map.fitBounds(bounds, { maxZoom: self.getCurrentMinZoom() });
-    */
+      this.map.fitBounds(searchBounds, { minZoom: self.getCurrentMinZoom() });
+    }
   };
   
   DetailsMap.prototype.clearSearchresults = function() {
     jQuery.each(resultLayers, function(gazetteer, layer) {
       layer.clearLayers();
     });
+    filterOverlay.clear();
   };
   
   DetailsMap.prototype.destroy = function() {
